@@ -8,46 +8,77 @@
 import SwiftUI
 
 struct ContentView: View {
-    let fruitsEmojis = ["🍏","🍎","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍"]
+    var fruitsEmojis = ["🍏","🍎","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍"]
     let objectsEmojis = ["⌚️","📱","💻","⌨️","🖥","🖨","🖲","🕹","🗜","💽","💾","💿","📷","☎️"]
     let natureEmojis = ["🌳", "🌲", "🌵", "🌷", "🌴", "🌻", "🌺", "⛰", "🗻", "🍄"]
     
+    @State var currentEmojis: Array<String>
+    @State var selectedColor: Color
+    init(){
+        currentEmojis = fruitsEmojis
+        selectedColor = .red
+    }
     @State var upperLimit = 7
+    
     var body: some View {
         VStack {
 //            Grid View for Cards with ScrollView as parent
+            header
             cardGridView
-//            Footer containing + and - buttons
             footer
+            
         }
         .padding()
     }
     
+    var header : some View {
+        Text("Memorize!")
+            .font(.largeTitle)
+            .fontWeight(.bold)
+            .foregroundColor(selectedColor)
+    }
+    
     var footer : some View {
-        HStack{
-            Image(systemName: "minus.circle")
-                .onTapGesture {
-                    if upperLimit >= 1 {
-                        upperLimit -= 1
-                    }
-                }
+        let subjects = [
+            Topics(name: "Fruits", color: .red, symbol: "applelogo"),
+            Topics(name: "Technology", color: .green, symbol: "tv.circle"),
+            Topics(name: "Nature", color: .orange, symbol: "leaf.circle")
+        ]
+        return HStack{
             Spacer()
-            Image(systemName: "plus.circle")
+            ForEach(subjects,id:\.name){subject in
+                VStack{
+                    Image(systemName: subject.symbol)
+                        .padding(.bottom, 2.0)
+                    Text(subject.name)
+                        .font(.subheadline)
+                }
                 .onTapGesture {
-                    if upperLimit + 1 < fruitsEmojis.count {
-                        upperLimit += 1
+                    if (subject.name) == "Fruits"{
+                        currentEmojis = fruitsEmojis.shuffled();
+                        selectedColor = subject.color
+                    }
+                    else if (subject.name) == "Technology"{
+                        currentEmojis = objectsEmojis.shuffled();
+                        selectedColor = subject.color
+                    }
+                    else{
+                        currentEmojis = natureEmojis.shuffled();
+                        selectedColor = subject.color
                     }
                 }
+                Spacer()
+            }
         }
-        .font(.largeTitle)
-        .foregroundColor(.blue)
+        .font(.title)
+        .foregroundColor(selectedColor)
     }
     
     var cardGridView : some View {
         ScrollView{
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]){
-                ForEach(fruitsEmojis[0...upperLimit], id: \.self){ emoji in
-                    CardView(content: emoji)
+                ForEach(currentEmojis[0...upperLimit], id: \.self){ emoji in
+                    CardView(content: emoji,selectedColor: selectedColor)
                         .aspectRatio(2/3, contentMode: .fit)
                 }
             }
@@ -59,12 +90,13 @@ struct ContentView: View {
 struct CardView : View {
     var content: String
     @State var isEmojiVisible : Bool = true
+    var selectedColor: Color
     var body: some View{
         if isEmojiVisible {
             ZStack {
                 RoundedRectangle(cornerRadius: 25).fill(.white)
                 RoundedRectangle(cornerRadius:25)
-                    .strokeBorder(Color.red,lineWidth: 3)
+                    .strokeBorder(selectedColor,lineWidth: 3)
                 Text(content)
                     .font(.largeTitle)
                     
@@ -80,6 +112,14 @@ struct CardView : View {
                 }
         }
     }
+}
+
+
+struct Topics : Identifiable {
+    var id = UUID()
+    var name: String
+    var color: Color
+    var symbol: String
 }
 
 struct ContentView_Previews: PreviewProvider {
